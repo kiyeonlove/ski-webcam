@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>기연&amp;종환용 스키장 실시간 웹캠</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/*
+VOICE: 친구들끼리 돌려보는 깔끔한 스키장 안내판, 크게 누르기 쉬운 버튼
+IDEA: 스키장 리프트 안내 표지판 — 짙은 남색 판에 흰 글씨, 슬로프 색 점
+PICTURE: 눈 덮인 산 능선과 리프트 줄 실루엣 (상단 밴드)
+COLOUR and TYPE: 밤하늘 남색 + 눈 흰색 + 리프트 빨강 포인트 / Black Han Sans 제목 + Noto Sans KR
+LAYOUT: 한 열, 리조트별 섹션, 카메라는 큰 터치 행, 넓은 화면에선 2열 그리드
+*/
+:root{color-scheme:light dark;
+--bg:light-dark(#eef3f8,#0b1622);--card:light-dark(#ffffff,#132233);--ink:light-dark(#0d1b2a,#eaf1f8);
+--sub:light-dark(#4a5c70,#9fb3c8);--line:light-dark(#d5dfe9,#22364b);--accent:#e63946;--sky:#0f2740;--sky2:#1d4670}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "Noto Sans KR",system-ui,sans-serif;overflow-x:clip}
+header{background:linear-gradient(180deg,var(--sky) 0%,var(--sky2) 100%);color:#fff;position:relative;overflow:hidden}
+.head-in{max-width:880px;margin:0 auto;padding:36px max(5vw,18px) 0;position:relative;z-index:1}
+h1{font:400 clamp(34px,8vw,50px)/1.05 "Black Han Sans","Noto Sans KR",sans-serif;margin:0 0 10px;text-wrap:balance}
+.lead{margin:0;color:#cfe0f2;font-size:16px;max-width:36em}
+.jump{display:flex;flex-wrap:wrap;gap:10px;margin:20px 0 0}
+.jump a{flex:none;color:#fff;text-decoration:none;font-weight:700;border:2px solid rgba(255,255,255,.55);border-radius:999px;padding:9px 18px;min-height:44px;display:inline-flex;align-items:center}
+.jump a:focus-visible,.jump a:hover{background:rgba(255,255,255,.15)}
+.mtn{display:block;width:100%;height:clamp(120px,24vw,190px);margin-top:-8px}
+main{max-width:880px;margin:0 auto;padding:8px max(5vw,16px) 48px}
+section{margin-top:34px;scroll-margin-top:16px}
+h2{font:400 clamp(28px,6vw,36px)/1.1 "Black Han Sans","Noto Sans KR",sans-serif;margin:0 0 6px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+h2 small{font:500 15px "Noto Sans KR",sans-serif;color:var(--sub)}
+.desc{color:var(--sub);margin:0 0 16px;font-size:16px}
+.big{display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--accent);color:#fff;text-decoration:none;
+ border-radius:14px;padding:18px 20px;font-weight:700;font-size:19px;min-height:64px;box-shadow:0 6px 16px -8px rgba(230,57,70,.7)}
+.big span:last-child{font-size:24px}
+.big:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.tags{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 0;padding:0;list-style:none}
+.tags li{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:15px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,300px),1fr));gap:10px;margin:0;padding:0;list-style:none}
+.cam{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:14px;
+ padding:12px 16px;min-height:62px;color:var(--ink);text-decoration:none;transition:transform .15s,border-color .15s}
+.cam:hover{border-color:var(--accent)}
+.cam:active{transform:scale(.98)}
+.cam:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.num{flex:none;width:38px;height:38px;border-radius:50%;background:var(--sky2);color:#fff;display:grid;place-items:center;font-weight:700;font-size:16px}
+.nm{flex:1;font-weight:500;font-size:17px;line-height:1.3}
+.go{flex:none;color:var(--accent);font-weight:700;font-size:15px;white-space:nowrap}
+.note{margin-top:40px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;font-size:15px;color:var(--sub)}
+.note p{margin:0 0 6px}.note p:last-child{margin:0}
+@media (prefers-reduced-motion:reduce){.cam{transition:none}.cam:active{transform:none}}
+</style>
+</head>
+<body>
+<header>
+ <div class="head-in">
+  <h1>기연&amp;종환용<br>스키장 실시간 웹캠</h1>
+  <p class="lead">용평·하이원 슬로프 상황을 지금 바로 확인하세요. 보고 싶은 카메라를 누르면 열립니다.</p>
+  <nav class="jump" aria-label="리조트 바로가기"><a href="#yongpyong">모나용평</a><a href="#high1">하이원</a></nav>
+ </div>
+ <svg class="mtn" viewBox="0 0 800 190" preserveAspectRatio="none" aria-hidden="true">
+  <defs><linearGradient id="snow" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#d9e6f2"/></linearGradient></defs>
+  <path d="M0 150 L140 70 L210 110 L330 30 L440 105 L520 60 L640 120 L720 85 L800 115 L800 190 L0 190Z" fill="#3a6a96" opacity=".55"/>
+  <path d="M0 175 L120 105 L200 140 L300 75 L380 125 L470 90 L580 145 L690 100 L800 140 L800 190 L0 190Z" fill="url(#snow)"/>
+  <path d="M300 75 L318 88 L306 92 L292 84Z M470 90 L486 101 L474 104Z" fill="#b9cde0"/>
+  <line x1="150" y1="160" x2="460" y2="48" stroke="#0f2740" stroke-width="1.6" opacity=".7"/>
+  <g fill="#e63946"><rect x="226" y="132" width="10" height="9" rx="2"/><rect x="306" y="103" width="10" height="9" rx="2"/><rect x="386" y="75" width="10" height="9" rx="2"/></g>
+  <g stroke="#0f2740" stroke-width="1.2" opacity=".7"><line x1="231" y1="132" x2="231" y2="125"/><line x1="311" y1="103" x2="311" y2="96"/><line x1="391" y1="75" x2="391" y2="68"/></g>
+ </svg>
+</header>
+<main>
+ <section id="yongpyong">
+  <h2>모나용평 <small>강원 평창 · 카메라 7대</small></h2>
+  <p class="desc">카메라를 누르면 영상이 바로 열려요. "전체 화면" 버튼으로 크게 볼 수 있어요.</p>
+  <ul class="grid" id="ypList"></ul>
+  <p class="desc" style="margin-top:12px">용평 공식 웹캠 페이지: <a href="https://www.yongpyong.co.kr/kor/guide/realTimeNews/ypResortWebcam.do" style="color:var(--accent);font-weight:700">바로가기</a></p>
+ </section>
+ <section id="high1">
+  <h2>하이원 <small>강원 정선 · 카메라 18대</small></h2>
+  <p class="desc">카메라를 누르면 바로 영상이 열립니다.</p>
+  <ul class="grid" id="h1List"></ul>
+ </section>
+ <div class="note">
+  <p>영상은 각 리조트 공식 홈페이지에서 나옵니다. 리조트 사정으로 카메라가 꺼져 있을 수 있어요.</p>
+  <p>하이원 화면에 "안전하지 않음"이 표시돼도 보는 데는 문제없습니다.</p>
+ </div>
+</main>
+<script>
+{
+ const yp=[["베이스 전경 / 레드 슬로프","cam08"],["핑크 슬로프","cam10"],["옐로우 슬로프","cam11"],["메가그린 슬로프","cam04"],["발왕산 氣 스카이워크","cam01"],["발왕산 천년주목숲길","cam02"],["모나용평 진입로","cam05"]];
+ const ypUrl=c=>'player.html?cam='+c;
+ const row=(href,i,n)=>`<li><a class="cam" href="${href}"${href.startsWith('http')?' target="_blank" rel="noopener"':''}><span class="num">${i+1}</span><span class="nm">${esc(n)}</span><span class="go">보기 →</span></a></li>`;
+ const h1=["제우스2번 슬로프 입구","헤라2번 슬로프 입구","하이원 탑","아테나1번 슬로프","마운틴 허브 베이스","아테나2번 슬로프","마운틴 베이스","아테나2번 슬로프 하단","빅토리아 상단","제우스 2번","밸리 허브 베이스","빅토리아1번 슬로프","제우스3번 슬로프","제우스3번 중단부","아폴로4번 중단부","아폴로 베이스","제우스3번 하단","밸리 베이스"];
+ const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+ document.getElementById('ypList').innerHTML=yp.map(([n,c],i)=>row(ypUrl(c),i,n)).join('');
+ document.getElementById('h1List').innerHTML=h1.map((n,i)=>
+  `<li><a class="cam" href="https://www.high1.com/webcam/pop_webcam.do?ch=${i+1}" target="_blank" rel="noopener"><span class="num">${i+1}</span><span class="nm">${esc(n)}</span><span class="go">보기 →</span></a></li>`).join('');
+}
+</script>
+</body>
+</html>

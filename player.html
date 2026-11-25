@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>용평 실시간 웹캠</title>
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{height:100%;background:#000;color:#fff;font:16px/1.4 "Noto Sans KR",system-ui,sans-serif}
+.wrap{min-height:100%;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top)) 14px 10px;background:#0f2740}
+.back{color:#fff;text-decoration:none;font-size:15px;border:1px solid rgba(255,255,255,.5);border-radius:999px;padding:8px 14px;white-space:nowrap}
+h1{font-size:18px;font-weight:700;flex:1}
+.stage{position:relative;background:#000;flex:none}
+video{display:block;width:100%;max-height:78vh;background:#000;aspect-ratio:16/9;object-fit:contain}
+.msg{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:20px;font-size:16px;color:#cfe0f2;pointer-events:none}
+.bar{display:flex;gap:10px;padding:12px 14px}
+.btn{flex:1;min-height:48px;border:0;border-radius:12px;background:#e63946;color:#fff;font:700 16px inherit;font-family:inherit;cursor:pointer}
+.btn.alt{background:#1d4670}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,240px),1fr));gap:8px;padding:4px 14px calc(20px + env(safe-area-inset-bottom))}
+.list a{display:flex;align-items:center;gap:10px;color:#eaf1f8;text-decoration:none;background:#132233;border:1px solid #22364b;border-radius:12px;padding:10px 14px;min-height:52px}
+.list a.on{border-color:#e63946;background:#2a1a22}
+.n{flex:none;width:30px;height:30px;border-radius:50%;background:#1d4670;display:grid;place-items:center;font-weight:700;font-size:14px}
+.cap{padding:6px 14px 8px;color:#9fb3c8;font-size:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+ <div class="top"><a class="back" href="./">← 목록</a><h1 id="ttl">용평 웹캠</h1></div>
+ <div class="stage"><video id="v" controls autoplay muted playsinline></video><div class="msg" id="msg">영상 불러오는 중…</div></div>
+ <div class="bar"><button class="btn" id="fs">전체 화면</button><button class="btn alt" id="rl">다시 연결</button></div>
+ <p class="cap">모나용평 다른 카메라</p>
+ <div class="list" id="list"></div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js"></script>
+<script>
+{
+ const cams=[["cam08","베이스 전경 / 레드 슬로프"],["cam10","핑크 슬로프"],["cam11","옐로우 슬로프"],["cam04","메가그린 슬로프"],["cam01","발왕산 氣 스카이워크"],["cam02","발왕산 천년주목숲길"],["cam05","모나용평 진입로"]];
+ const q=new URLSearchParams(location.search);
+ let id=q.get('cam'); if(!cams.some(c=>c[0]===id)) id=cams[0][0];
+ const name=cams.find(c=>c[0]===id)[1];
+ const v=document.getElementById('v'), msg=document.getElementById('msg');
+ document.getElementById('ttl').textContent=name;
+ document.title=name+' · 용평 실시간 웹캠';
+ const esc=s=>s.replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+ document.getElementById('list').innerHTML=cams.map(([c,n],i)=>`<a href="?cam=${c}" class="${c===id?'on':''}"><span class="n">${i+1}</span><span>${esc(n)}</span></a>`).join('');
+ const src='https://live.yongpyong.co.kr/'+id+'/index.m3u8';
+ let hls=null;
+ const show=t=>{msg.textContent=t;msg.style.display=t?'grid':'none'};
+ function start(){
+  show('영상 불러오는 중…');
+  if(hls){hls.destroy();hls=null}
+  if(window.Hls&&Hls.isSupported()){
+   hls=new Hls({liveSyncDurationCount:3,maxBufferLength:20,manifestLoadingMaxRetry:6,levelLoadingMaxRetry:6,fragLoadingMaxRetry:6});
+   hls.loadSource(src);hls.attachMedia(v);
+   hls.on(Hls.Events.MANIFEST_PARSED,()=>{v.play().catch(()=>{})});
+   hls.on(Hls.Events.ERROR,(e,d)=>{
+    if(!d.fatal)return;
+    if(d.type===Hls.ErrorTypes.MEDIA_ERROR){hls.recoverMediaError();return}
+    show('연결이 끊겼어요. 다시 연결하는 중…');setTimeout(start,3000);
+   });
+  }else if(v.canPlayType('application/vnd.apple.mpegurl')){
+   v.src=src;v.play().catch(()=>{});
+  }else show('이 브라우저에서는 재생할 수 없어요. 크롬이나 삼성 인터넷으로 열어 주세요.');
+ }
+ v.addEventListener('playing',()=>show(''));
+ v.addEventListener('waiting',()=>show('잠시만요…'));
+ document.getElementById('rl').onclick=start;
+ document.getElementById('fs').onclick=()=>{
+  const el=v;
+  if(el.requestFullscreen) el.requestFullscreen().then(()=>{try{screen.orientation.lock('landscape').catch(()=>{})}catch(e){}}).catch(()=>{});
+  else if(el.webkitEnterFullscreen) el.webkitEnterFullscreen();
+ };
+ start();
+}
+</script>
+</body>
+</html>
